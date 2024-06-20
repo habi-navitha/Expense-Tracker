@@ -1,117 +1,73 @@
-// script.js 
-// Get form, expense list, and total amount elements 
+let dailyLimit = 0;
+let totalExpenses = 0;
+let expenses = [];
 
+function setDailyLimit() {
+    const limitInput = document.getElementById('dailyLimit');
+    dailyLimit = parseFloat(limitInput.value);
+    if (isNaN(dailyLimit) || dailyLimit <= 0) {
+        alert('Please enter a valid daily spending limit.');
+        return;
+    }
+    limitInput.disabled = true;
+    document.getElementById('expenseTracker').style.display = 'block';
+}
 
+function addExpense() {
+    const nameInput = document.getElementById('expenseName');
+    const amountInput = document.getElementById('expenseAmount');
+    const name = nameInput.value.trim();
+    const amount = parseFloat(amountInput.value);
+    if (name === '' || isNaN(amount) || amount <= 0) {
+        alert('Please enter a valid expense name and amount.');
+        return;
+    }
+    expenses.push({ name, amount });
+    totalExpenses += amount;
+    nameInput.value = '';
+    amountInput.value = '';
+    updateTotalExpenses();
+    updateAllExpenses();
+}
 
-const expenseForm = 
-	document.getElementById("expense-form"); 
-const expenseList = 
-	document.getElementById("expense-list"); 
-const totalAmountElement = 
-	document.getElementById("total-amount"); 
+function updateTotalExpenses() {
+    const totalExpensesElem = document.getElementById('totalExpenses');
+    totalExpensesElem.textContent = `Total Expenses: $${totalExpenses.toFixed(2)}`;
+    totalExpensesElem.style.color = totalExpenses > dailyLimit ? 'red' : 'green';
+}
 
-// Initialize expenses array from localStorage 
-let expenses = 
-	JSON.parse(localStorage.getItem("expenses")) || []; 
+function viewTotalExpenses() {
+    updateTotalExpenses();
+    const message = totalExpenses > dailyLimit ? 'Exceed Your Daily Limit! Learn to Save Money.' : 'Expenses within your Daily Limit.';
+    alert(message);
+}
 
-// Function to render expenses in tabular form 
-function renderExpenses() { 
+function viewAllExpenses() {
+    const allExpensesElem = document.getElementById('allExpenses');
+    allExpensesElem.innerHTML = '';
+    expenses.forEach((expense, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${index + 1}. ${expense.name} - $${expense.amount.toFixed(2)}`;
+        allExpensesElem.appendChild(li);
+    });
+}
 
-	// Clear expense list 
-	expenseList.innerHTML = ""; 
+function deleteExpense() {
+    const indexInput = document.getElementById('deleteIndex');
+    const index = parseInt(indexInput.value);
+    if (isNaN(index) || index < 1 || index > expenses.length) {
+        alert('Invalid index. Please enter a valid index.');
+        return;
+    }
+    const deletedExpense = expenses.splice(index - 1, 1)[0];
+    totalExpenses -= deletedExpense.amount;
+    indexInput.value = '';
+    updateTotalExpenses();
+    updateAllExpenses();
+}
 
-	// Initialize total amount 
-	let totalAmount = 0; 
-
-	// Loop through expenses array and create table rows 
-	for (let i = 0; i < expenses.length; i++) { 
-		const expense = expenses[i]; 
-		const expenseRow = document.createElement("tr"); 
-		expenseRow.innerHTML = ` 
-	<td>${expense.name}</td> 
-	<td>$${expense.amount}</td> 
-	<td class="delete-btn" data-id="${i}">Delete</td> 
-	`; 
-		expenseList.appendChild(expenseRow); 
-
-		// Update total amount 
-		totalAmount += expense.amount; 
-	} 
-
-	// Update total amount display 
-	totalAmountElement.textContent = 
-		totalAmount.toFixed(2); 
-
-	// Save expenses to localStorage 
-	localStorage.setItem("expenses", 
-		JSON.stringify(expenses)); 
-} 
-
-// Function to add expense 
-function addExpense(event) { 
-	event.preventDefault(); 
-
-	// Get expense name and amount from form 
-	const expenseNameInput = 
-		document.getElementById("expense-name"); 
-	const expenseAmountInput = 
-		document.getElementById("expense-amount"); 
-	const expenseName = 
-		expenseNameInput.value; 
-	const expenseAmount = 
-		parseFloat(expenseAmountInput.value); 
-
-	// Clear form inputs 
-	expenseNameInput.value = ""; 
-	expenseAmountInput.value = ""; 
-
-	// Validate inputs 
-	if (expenseName === "" || isNaN(expenseAmount)) { 
-		alert("Please enter valid expense details."); 
-		return; 
-	} 
-
-	// Create new expense object 
-	const expense = { 
-		name: expenseName, 
-		amount: expenseAmount, 
-	}; 
-
-	// Add expense to expenses array 
-	expenses.push(expense); 
-
-	// Render expenses 
-	renderExpenses(); 
-} 
-
-// Function to delete expense 
-function deleteExpense(event) { 
-	if (event.target.classList.contains("delete-btn")) { 
-
-		// Get expense index from data-id attribute 
-		const expenseIndex = 
-			parseInt(event.target.getAttribute("data-id")); 
-
-		// Remove expense from expenses array 
-		expenses.splice(expenseIndex, 1); 
-
-		// Render expenses 
-		renderExpenses(); 
-	} 
-} 
-
-// Add event listeners 
-expenseForm.addEventListener("submit", addExpense); 
-expenseList.addEventListener("click", deleteExpense); 
-
-// Render initial expenses on page load 
-renderExpenses();
-
-
-
-
-
-
-
-
-
+function exit() {
+    if (confirm('Are you sure you want to exit?')) {
+        window.close();
+    }
+}
